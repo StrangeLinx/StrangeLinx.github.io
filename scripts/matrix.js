@@ -1,12 +1,11 @@
-export { Matrix };
-
-
-class Matrix {
+export default class Matrix {
 
     constructor() {
         this.rows = 20;
         this.cols = 10;
         this.minosPreview = [];
+        this.centerHold = { x: 1, y: 4 };
+        this.centerNext = { x: 2, y: -1 };
         this.new();
     }
 
@@ -18,16 +17,16 @@ class Matrix {
         this.gameOver = false;
     }
 
-    getMinos() {
+    getMatrixMinos() {
         return this.minos.concat(this.minosPreview);
     }
 
-    getHoldMinos(piece) {
+    generateHoldMinos(piece) {
         let xPos, yPos;
         let holdMinos = [];
         for (let i = 0; i < piece.span.length; i++) {
-            xPos = piece.x + piece.span[i].x;
-            yPos = piece.y + piece.span[i].y;
+            xPos = this.centerHold.x + piece.span[i].x;
+            yPos = this.centerHold.y + piece.span[i].y;
             holdMinos.push({
                 x: xPos,
                 y: yPos,
@@ -37,13 +36,19 @@ class Matrix {
         return holdMinos;
     }
 
-    getNextMinos(pieces) {
+    generateNextMinos(pieces) {
         let xPos, yPos;
         let nextMinos = [];
+
+        // Offsets 
+        let centerX = this.centerNext.x
+        let centerY = this.centerNext.y;
+
         pieces.forEach(piece => {
+            centerY += 3;
             for (let i = 0; i < piece.span.length; i++) {
-                xPos = piece.x + piece.span[i].x;
-                yPos = piece.y + piece.span[i].y;
+                xPos = centerX + piece.span[i].x;
+                yPos = centerY + piece.span[i].y;
                 nextMinos.push({
                     x: xPos,
                     y: yPos,
@@ -97,8 +102,6 @@ class Matrix {
             if (yPos >= this.rows) {
                 return false;
             }
-            // I need to come back to this. For now, if it's above the board 
-            // where the piece spawns it's valid
             if (yPos < 0) {
                 continue;
             }
@@ -131,15 +134,15 @@ class Matrix {
         });
     }
 
-    preview(piece, ghost) {
+    setPreviewPieces(piece, ghost) {
         this.minosPreview = [];
-        this.previewCurrent(piece);
         if (ghost) {
-            this.previewCurrent(ghost);
+            this.previewPiece(ghost);
         }
+        this.previewPiece(piece);
     }
 
-    previewCurrent(piece) {
+    previewPiece(piece) {
         let xPos, yPos;
         for (let i = 0; i < piece.span.length; i++) {
             xPos = piece.x + piece.span[i].x;
@@ -151,11 +154,11 @@ class Matrix {
                 this.gameOver = true;
                 continue;
             }
-            this.placeMinoPreview(xPos, yPos, piece.type);
+            this.previewMino(xPos, yPos, piece.type);
         }
     }
 
-    placeMinoPreview(xPos, yPos, minoType) {
+    previewMino(xPos, yPos, minoType) {
         this.minosPreview.push({
             x: xPos,
             y: yPos,

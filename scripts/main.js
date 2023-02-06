@@ -1,55 +1,23 @@
-import { Game } from "./game.js";
-// Issues:
-//   When appending minos to the matrixDiv, they are placed on top of the "empty" ones
-//   The empty ones should be deleted
-//   Too many unnecessary divs
-//   This should be something compelted in CSS not JavaScript
+import Game from "./game.js";
 
 const game = new Game();
 const backgroundDiv = document.createElement("div");
-const backgroundHoldDiv = document.createElement("div");
-const backgroundNextDiv = document.createElement("div");
 const holdDiv = document.getElementById("hold");
 const matrixDiv = document.getElementById("matrix");
 const nextDiv = document.getElementById("next");
-let rows, cols;
 let lastTime;
 let inputQueue;
 
 function initialize() {
-    rows = game.getRows();
-    cols = game.getCols();
-    matrixDiv.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-    matrixDiv.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    holdDiv.style.gridTemplateRows = `repeate${4}, 1fr)`;
-    holdDiv.style.gridTemplateRows = `repeate${4}, 1fr)`;
     createBackgroundDiv();
-    createBackgroundHoldDiv();
-    createBackgroundNextDiv();
     lastTime = 0;
     inputQueue = [];
 }
 
 function createBackgroundDiv() {
-    for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
+    for (let y = 0; y < game.getRows(); y++) {
+        for (let x = 0; x < game.getCols(); x++) {
             backgroundDiv.appendChild(createMinoDiv(x, y, "empty"));
-        }
-    }
-}
-
-function createBackgroundHoldDiv() {
-    for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < 5; x++) {
-            backgroundHoldDiv.appendChild(createMinoDiv(x, y));
-        }
-    }
-}
-
-function createBackgroundNextDiv() {
-    for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < 5; x++) {
-            backgroundNextDiv.appendChild(createMinoDiv(x, y));
         }
     }
 }
@@ -72,36 +40,28 @@ function update() {
 }
 
 function draw() {
-    if (!game.updated) {
-        return;
+    if (game.updatedMatrix) {
+        matrixDiv.innerHTML = backgroundDiv.innerHTML;
+        drawMinos(matrixDiv, game.getMatrixMinos());
+        game.setUpdatedMatrix(false);
     }
-    matrixDiv.innerHTML = backgroundDiv.innerHTML;
-    holdDiv.innerHTML = backgroundHoldDiv.innerHTML;
-    nextDiv.innerHTML = backgroundNextDiv.innerHTML;
-    drawMinos();
-    drawHold();
-    drawNext();
-    game.setUpdated(false);
+    if (game.updatedHold) {
+        holdDiv.innerHTML = "";
+        drawMinos(holdDiv, game.getHoldMinos());
+        game.setUpdatedHold(false);
+    }
+    if (game.updatedNext) {
+        nextDiv.innerHTML = "";
+        drawMinos(nextDiv, game.getNextMinos());
+        game.setUpdatedNext(false);
+    }
 }
 
-function drawHold() {
-    game.getHoldMinos().forEach(mino => {
-        holdDiv.appendChild(createMinoDiv(mino.x, mino.y, mino.type));
+function drawMinos(parentDiv, minos) {
+    minos.forEach(mino => {
+        parentDiv.appendChild(createMinoDiv(mino.x, mino.y, mino.type));
     });
 }
-
-function drawNext() {
-    game.getNextMinos().forEach(mino => {
-        nextDiv.appendChild(createMinoDiv(mino.x, mino.y, mino.type));
-    });
-}
-
-function drawMinos() {
-    game.getMinos().forEach(mino => {
-        matrixDiv.appendChild(createMinoDiv(mino.x, mino.y, mino.type));
-    });
-}
-
 
 function createMinoDiv(x, y, minoType) {
     const minoDiv = document.createElement("div");
@@ -137,7 +97,7 @@ window.addEventListener("keydown", ev => {
     } else if (ev.key.toUpperCase() === "R") {
         restart();
     } else if (ev.key.toUpperCase() === "Z") {
-        inputQueue.push({ type: "hold"});
+        inputQueue.push({ type: "hold" });
     }
 })
 

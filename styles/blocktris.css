@@ -13,32 +13,33 @@ body {
     width: 100vw;
 }
 
-#options-overlay {
+#overlays {
     display: none;
 }
 
 #hold {
     display: grid;
-    background-color: black;
-    border-radius: 2px;
+    grid-template-rows: repeat(20, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     width: 24vmin;
     height: 96vmin;
 }
 
 #next {
     display: grid;
-    background-color: black;
-    border-radius: 2px;
+    grid-template-rows: repeat(20, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     width: 24vmin;
     height: 96vmin;
 }
 
 #matrix {
     display: grid;
-    background-color: black;
     border-radius: 2px;
-    /* Matrix height is twice it's width */
     border: 0.2vmin solid #393939;
+    /* Matrix is defined to be 20 by 10 */
+    grid-template-rows: repeat(20, 1fr);
+    grid-template-columns: repeat(10, 1fr);
     width: 48vmin;
     height: 96vmin;
 }

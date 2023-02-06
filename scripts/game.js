@@ -1,67 +1,95 @@
-export { Game };
-import { Matrix } from "./matrix.js";
-import { Bag } from "./bag.js";
+import Matrix from "./matrix.js";
+import Bag from "./bag.js";
 
 
-class Game {
+export default class Game {
 
     constructor() {
         this.new()
     }
 
     new() {
-        this.updated = true;
         this.bag = new Bag();
         this.matrix = new Matrix();
-        this.inputQueue = [];
-        this.previewPiece();
+        this.previewPieces();
+        this.updatedMatrix = true;
+        this.updatedHold = true;
+        this.updatedNext = true;
+    }
+
+    previewPieces() {
+        let ghostPiece = this.calculateGhostPiece();
+        this.matrix.setPreviewPieces(this.bag.currentPiece(), ghostPiece);
+    }
+
+    calculateGhostPiece() {
+        let currentPiece = this.bag.currentPiece();
+        let ghostPiece = this.calculateDroppedPiece(currentPiece)
+
+        // If the ghost piece is underneath the current piece there's no ghost
+        if (this.bag.sameCoords(currentPiece, ghostPiece)) {
+            return;
+        }
+        this.bag.makeGhost(ghostPiece);
+        return ghostPiece;
+    }
+
+    calculateDroppedPiece(piece) {
+        let newPiece = piece;
+        let potentialPiece = this.bag.shiftPiece(piece, 0, 1); // move 1 down
+        while (this.matrix.valid(potentialPiece)) {
+            newPiece = potentialPiece;
+            potentialPiece = this.bag.shiftPiece(newPiece, 0, 1);
+        }
+        return newPiece;
     }
 
     update(move) {
         if (move.type === "shift") {
-            let shiftedPiece = this.bag.newShiftedPiece(move);
-            if (this.matrix.valid(shiftedPiece)) {
-                this.bag.setCurrentPiece(shiftedPiece);
-                this.updated = true;
-            }
+            this.shiftPiece(move.x, move.y);
         } else if (move.type === "rotate") {
-            let rotatedPiece = this.bag.newRotatedPiece(move);
-            if (this.matrix.valid(rotatedPiece)) {
-                this.bag.setCurrentPiece(rotatedPiece);
-                this.updated = true;
-            }
+            this.rotatePiece(move.rot)
         } else if (move.type === "drop") {
-            let droppedPiece = this.bag.currentPiece;  // valid
-            let potDroppedPiece = this.bag.newShiftedPiece({ x: 0, y: 1 });
-            while (this.matrix.valid(potDroppedPiece)) {
-                droppedPiece = potDroppedPiece;
-                this.bag.setCurrentPiece(droppedPiece);
-                potDroppedPiece = this.bag.newShiftedPiece({ x: 0, y: 1 });
-            }
-            this.matrix.place(droppedPiece);
-            this.bag.place();
-            this.updated = true;
-            this.matrix.clearLines();
+            this.dropPiece();
         } else if (move.type === "hold") {
-            this.bag.hold();
-            this.updated = true;
+            this.holdPiece();
         }
-        this.previewPiece();
-        this.matrix.previewCurrent(this.bag.currentPiece);
+        if (this.updatedMatrix) {
+            this.previewPieces();
+        }
     }
 
-    previewPiece() {
-        let ghostPiece;
-        let nextGhostPiece = this.bag.newGhostPiece();
-        while (this.matrix.valid(nextGhostPiece)) {
-            ghostPiece = nextGhostPiece;
-            nextGhostPiece = this.bag.nextGhostPiece();
-        }
-        this.matrix.preview(this.bag.currentPiece, ghostPiece);
+    shiftPiece(x, y) {
+        let shiftedPiece = this.bag.shiftCurrentPiece(x, y);
+        this.moveIfValid(shiftedPiece);
     }
 
-    setUpdated(bool) {
-        this.updated = bool;
+    rotatePiece(rot) {
+        let rotatedPiece = this.bag.rotateCurrentPiece(rot);
+        this.moveIfValid(rotatedPiece)
+    }
+
+    dropPiece() {
+        let droppedPiece = this.calculateDroppedPiece(this.bag.currentPiece());
+        this.matrix.place(droppedPiece);
+        this.bag.place();
+        this.matrix.clearLines();
+        this.updatedMatrix = true;
+        this.updatedNext = true;
+    }
+
+    holdPiece() {
+        const [held, heldNext] = this.bag.hold();
+        this.updatedMatrix = held;  // If piece is held, new piece in the matrix
+        this.updatedHold = held;
+        this.updatedNext = heldNext;
+    }
+
+    moveIfValid(piece) {
+        if (this.matrix.valid(piece)) {
+            this.bag.setCurrentPiece(piece);
+            this.updatedMatrix = true;
+        }
     }
 
     getRows() {
@@ -72,21 +100,33 @@ class Game {
         return this.matrix.cols;
     }
 
-    getMinos() {
-        return this.matrix.getMinos();
+    getMatrixMinos() {
+        return this.matrix.getMatrixMinos();
     }
 
     getHoldMinos() {
         let holdPiecePreview = this.bag.holdPreview();
         if (holdPiecePreview) {
-            return this.matrix.getHoldMinos(holdPiecePreview);
+            return this.matrix.generateHoldMinos(holdPiecePreview);
         }
         return [];
     }
 
     getNextMinos() {
-        let nextPieces = this.bag.nextPreview();
-        return this.matrix.getNextMinos(nextPieces);
+        let nextPieces = this.bag.nextPreviews();
+        return this.matrix.generateNextMinos(nextPieces);
+    }
+
+    setUpdatedMatrix(bool) {
+        this.updatedMatrix = bool;
+    }
+
+    setUpdatedHold(bool) {
+        this.updatedHold = bool;
+    }
+
+    setUpdatedNext(bool) {
+        this.updatedNext = bool;
     }
 
     over() {
