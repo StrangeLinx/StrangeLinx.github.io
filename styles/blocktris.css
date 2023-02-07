@@ -6,6 +6,7 @@
 
 body {
     display: flex;
+    font-family: "Helvetica", "Arial", sans-serif;
     background-color: black;
     align-items: center;
     justify-content: center;
@@ -13,36 +14,169 @@ body {
     width: 100vw;
 }
 
-#overlays {
+/* 
+
+    Different Menu Screens
+
+*/
+
+.overlay {
+    display: flex;
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    z-index: 2;
+}
+
+.navigation {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(141, 141, 141, 0.5);
+    width: 40vh;
+    height: 80vh;
+    border-radius: 5vh;
+}
+
+#controls, #settings {
     display: none;
 }
 
-#hold {
-    display: grid;
-    grid-template-rows: repeat(20, 1fr);
-    grid-template-columns: repeat(5, 1fr);
-    width: 24vmin;
-    height: 96vmin;
+/* 
+
+    Menu buttons and buttons from the game controls menu
+
+*/
+
+.button {
+    display: block;
+    width: 30vh;
+    padding: 4vh;
+    margin: 5vh;
+    font-size: 1.6em;
+    background-color: rgba(255, 255, 255, 0.70);
+    text-align: center;
+    color: black;
+    border-radius: 15px;
+    cursor: default;
 }
 
-#next {
-    display: grid;
-    grid-template-rows: repeat(20, 1fr);
-    grid-template-columns: repeat(5, 1fr);
-    width: 24vmin;
-    height: 96vmin;
+.gameControlButton {
+    display: block;
+    width: 30vh;
+    padding: 1vh;
+    margin: 1vh;
+    font-size: 1em;
+    background-color: rgba(255, 255, 255, 0.70);
+    border: 1px solid #C8C8C8;
+    text-align: center;
+    color: black;
+    border-radius: 15px;
+    cursor: default;
 }
+
+.gameControlButton:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.gameControlButton:active {
+    background-color: rgba(255, 255, 255, 0.90);
+}
+
+.gameControlButtonClicked {
+    background-color: rgba(255, 255, 255, 0.4);
+    color: white;
+    border: 1px solid white;
+}
+
+.button:hover {
+    background-color: rgba(255, 255, 255, 0.90);
+}
+
+.button:active {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* 
+
+    Matrix is the board where pieces will be placed
+    hold is the held piece preview
+    next are the pieces in queue
+
+*/
 
 #matrix {
     display: grid;
-    border-radius: 2px;
+    border-radius: 3px;
     border: 0.2vmin solid #393939;
     /* Matrix is defined to be 20 by 10 */
     grid-template-rows: repeat(20, 1fr);
     grid-template-columns: repeat(10, 1fr);
-    width: 48vmin;
-    height: 96vmin;
+    width: 40vh;
+    height: 80vh;
 }
+
+/*
+If viewing on mobile real estate is more important than previews
+(maybe not hold). Will add feature for mobile support later (if at all)
+Long story short: No hold or next preview for restricted ratios.
+*/
+
+#hold {
+    display: none;
+    grid-template-rows: repeat(20, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+}
+
+#next {
+    display: none;
+    grid-template-rows: repeat(20, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+}
+
+@media screen and (orientation: landscape) {
+    #matrix {
+        width: 48vh;
+        height: 96vh;
+    }
+    #hold, #next {
+        display: grid;
+        width: 24vh;
+        height: 96vh;
+    }
+
+    .navigation {
+        width: 48vh;
+        height: 96vh;
+        font-size: 1.3em;
+    }
+
+    .button {
+        width: 45vh;
+        font-size: 1em;
+    }
+
+    .gameControlButton {
+        width: 45vh;
+    }
+    
+
+}
+
+
+/* 
+
+    Piece Decorations
+    empty - gives matrix background pattern
+    ghost - where piece would be if hard dropped
+    oiljstz - pieces
+
+*/
 
 .empty {
     border: 1px dotted #393939;

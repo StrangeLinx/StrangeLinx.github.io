@@ -15,6 +15,7 @@ export default class Game {
         this.updatedMatrix = true;
         this.updatedHold = true;
         this.updatedNext = true;
+        this.paused = false;
     }
 
     previewPieces() {
@@ -131,6 +132,14 @@ export default class Game {
 
     over() {
         return this.matrix.gameOver;
+    }
+
+    pause() {
+        this.paused = true;
+    }
+
+    resume() {
+        this.paused = false;
     }
 
 }

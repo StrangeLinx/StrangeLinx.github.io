@@ -5,13 +5,32 @@ const backgroundDiv = document.createElement("div");
 const holdDiv = document.getElementById("hold");
 const matrixDiv = document.getElementById("matrix");
 const nextDiv = document.getElementById("next");
+const menuDiv = document.getElementById("menu");
+const controlsDiv = document.getElementById("controls");
+const settingsDiv = document.getElementById("settings");
+const gameControls = {
+    moveLeft: "ArrowLeft",
+    moveRight: "ArrowRight",
+    moveDown: "ArrowDown",
+    moveDrop: "c",
+    moveRotC: "ArrowUp",
+    moveRotCC: "x",
+    moveHold: "z"    
+};
+
+
 let lastTime;
 let inputQueue;
+let configureInputPressed;
+let configureInputButton;
 
 function initialize() {
     createBackgroundDiv();
     lastTime = 0;
     inputQueue = [];
+    configureInputPressed = false;
+    configureInputButton = "";
+    draw();
 }
 
 function createBackgroundDiv() {
@@ -23,8 +42,7 @@ function createBackgroundDiv() {
 }
 
 function main() {
-    if (game.over()) {
-        console.log("Game Over");
+    if (game.over() || game.paused) {
         return;
     }
     update();
@@ -81,25 +99,84 @@ function restart() {
     window.requestAnimationFrame(main);
 }
 
+function pauseResume() {
+    // Controls and settings menu should return to main menu
+    if (controlsDiv.style.display !== "none") {
+        pause();
+    } else if (settingsDiv.style.display !== "none") {
+        pause();
+    } else if (!game.paused) {
+        pause();
+    } else {
+        resume();
+    }
+}
+
+function pause() {
+    game.pause();
+    controlsDiv.style.display = "none";
+    settingsDiv.style.display = "none";
+    menuDiv.style.display = "flex";
+    
+}
+
+function resume() {
+    game.resume();
+    controlsDiv.style.display = "none";
+    settingsDiv.style.display = "none";
+    menuDiv.style.display = "none";
+    inputQueue = [];
+    window.requestAnimationFrame(main);
+}
+
+function controls() {
+    menuDiv.style.display = "none";
+    controlsDiv.style.display = "flex";
+}
+
 window.addEventListener("keydown", ev => {
-    if (ev.key === "ArrowLeft") {
+    if (configureInputPressed) {
+        configureInputButton.classList.remove("gameControlButtonClicked");
+        configureInputPressed = false;
+    }
+    if (ev.key === gameControls.moveLeft) {
         inputQueue.push({ type: "shift", x: -1, y: 0 });
-    } else if (ev.key === "ArrowRight") {
+    } else if (ev.key === gameControls.moveRight) {
         inputQueue.push({ type: "shift", x: 1, y: 0 });
-    } else if (ev.key === "ArrowDown") {
+    } else if (ev.key === gameControls.moveDown) {
         inputQueue.push({ type: "shift", x: 0, y: 1 });
-    } else if (ev.key === "ArrowUp") {
+    } else if (ev.key === gameControls.moveRotC) {
         inputQueue.push({ type: "rotate", rot: 1 });
-    } else if (ev.key.toUpperCase() === "X") {
+    } else if (ev.key === gameControls.moveRotCC) {
         inputQueue.push({ type: "rotate", rot: -1 });
-    } else if (ev.key.toUpperCase() === "C") {
+    } else if (ev.key === gameControls.moveDrop) {
         inputQueue.push({ type: "drop" });
+    } else if (ev.key === gameControls.moveHold) {
+        inputQueue.push({ type: "hold" });
     } else if (ev.key.toUpperCase() === "R") {
         restart();
-    } else if (ev.key.toUpperCase() === "Z") {
-        inputQueue.push({ type: "hold" });
+    } else if (ev.key === "Escape") {
+        pauseResume();
     }
 })
 
+document.getElementById("startButton").onclick = () => {
+    resume();
+}
+
+document.getElementById("controlsButton").onclick = () => {
+    controls();
+}
+
+document.querySelectorAll(".gameControlButton").forEach(button => {
+    button.onclick = () => {
+        if (configureInputPressed) {
+            return;
+        }
+        configureInputPressed = true;
+        button.classList.add("gameControlButtonClicked");
+        configureInputButton = button;
+    }
+});
+
 initialize();
-window.requestAnimationFrame(main);
