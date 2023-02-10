@@ -8,28 +8,51 @@ const nextDiv = document.getElementById("next");
 const menuDiv = document.getElementById("menu");
 const controlsDiv = document.getElementById("controls");
 const settingsDiv = document.getElementById("settings");
-const gameControls = {
+
+const controls = {
     moveLeft: "ArrowLeft",
     moveRight: "ArrowRight",
     moveDown: "ArrowDown",
     moveDrop: "c",
     moveRotC: "ArrowUp",
     moveRotCC: "x",
-    moveHold: "z"    
+    moveHold: "z",
+    // Indexed to determine key held
+    "ArrowLeft": false,
+    "ArrowRight": false,
+    "ArrowDown": false,
+    "c": false,
+    "ArrowUp": false,
+    "x": false,
+    "z": false,
+    "r": false,
+    "Escape": false,
+    reserved: { r: true, Escape: true }
 };
 
+const moves = {
+    left: { type: "shift", x: -1, y: 0 },
+    right: { type: "shift", x: 1, y: 0 },
+    down: { type: "shift", x: 0, y: 1 },
+    rotC: { type: "rotate", rot: 1 },
+    rotCC: { type: "rotate", rot: -1 },
+    drop: { type: "drop" },
+    hold: { type: "hold" }
+}
 
-let lastTime;
-let inputQueue;
-let configureInputPressed;
-let configureInputButton;
+const DASDEFAULT = 105;
+const ARRDEFAULT = 1;
+const SOFTDROPDEFAULT = 10
+let das = DASDEFAULT;
+let arr = ARRDEFAULT;
+let soft = SOFTDROPDEFAULT;
+let lastTime = 0;
+let inputQueue = [];
+let configureInput = false;
+let keyPressed = "";
 
 function initialize() {
     createBackgroundDiv();
-    lastTime = 0;
-    inputQueue = [];
-    configureInputPressed = false;
-    configureInputButton = "";
     draw();
 }
 
@@ -42,7 +65,11 @@ function createBackgroundDiv() {
 }
 
 function main() {
-    if (game.over() || game.paused) {
+    if (game.over()) {
+        pause();
+        return;
+    }
+    if (game.paused) {
         return;
     }
     update();
@@ -55,6 +82,10 @@ function update() {
     if (move) {
         game.update(move);
     }
+}
+
+function getInput() {
+    return inputQueue.shift();
 }
 
 function draw() {
@@ -89,26 +120,49 @@ function createMinoDiv(x, y, minoType) {
     return minoDiv;
 }
 
-function getInput() {
-    return inputQueue.shift();
-}
-
 function restart() {
     game.new();
-    inputQueue = [];
-    window.requestAnimationFrame(main);
+    resume();
 }
 
-function pauseResume() {
+function pauseOrResume() {
+    // Configuring controls shouldn't pause or resume
+    if (configureInput) {
+        return;
+    }
     // Controls and settings menu should return to main menu
-    if (controlsDiv.style.display !== "none") {
+    if (controlsDiv.style.display === "flex") {
         pause();
-    } else if (settingsDiv.style.display !== "none") {
+    } else if (settingsDiv.style.display === "flex") {
+        configureSettings();
         pause();
+    } else if (game.over()) {
+        restart();
     } else if (!game.paused) {
         pause();
     } else {
         resume();
+    }
+}
+
+function configureSettings() {
+    const dasIn = document.getElementById("DASinput");
+    const arrIn = document.getElementById("ARRinput");
+    const softIn = document.getElementById("softInput");
+    if (dasIn.value === "") {
+        das = DASDEFAULT;
+    } else if (!isNaN(parseFloat(dasIn.value)) && isFinite(dasIn.value)) {
+        das = dasIn.value;
+    }
+    if (arrIn.value === "") {
+        arr = ARRDEFAULT;
+    } else if (!isNaN(parseFloat(arrIn.value)) && isFinite(arrIn.value)) {
+        arr = arrIn.value;
+    }
+    if (softIn.value === "") {
+        soft = SOFTDROPDEFAULT;
+    } else if (!isNaN(parseFloat(softIn.value)) && isFinite(softIn.value)) {
+        soft = softIn.value;
     }
 }
 
@@ -117,7 +171,7 @@ function pause() {
     controlsDiv.style.display = "none";
     settingsDiv.style.display = "none";
     menuDiv.style.display = "flex";
-    
+
 }
 
 function resume() {
@@ -129,54 +183,150 @@ function resume() {
     window.requestAnimationFrame(main);
 }
 
-function controls() {
-    menuDiv.style.display = "none";
-    controlsDiv.style.display = "flex";
+function moveSideways(key, move, oppKey) {
+
+    // Cancel move
+    // Ex: Holding left then pressing right should cancel moving left
+    if (controls[oppKey] !== false) {
+        clearTimeout(controls[oppKey]);
+        controls[oppKey] = false;
+    }
+
+    controls[key] = true;
+    doMove(move);
+    controls[key] = setTimeout(accumulateMoveDAS, das, move, key);
 }
 
-window.addEventListener("keydown", ev => {
-    if (configureInputPressed) {
-        configureInputButton.classList.remove("gameControlButtonClicked");
-        configureInputPressed = false;
+function accumulateMoveDAS(move, key) {
+    controls[key] = setTimeout(accumulateMoveARR, arr, move, key, arr);
+}
+
+function accumulateMoveARR(move, key, delay) {
+    doMove(move);
+    controls[key] = setTimeout(accumulateMoveARR, delay, move, key, delay);
+}
+
+function doMoveOnce(move, key) {
+    controls[key] = true;
+    doMove(move);
+}
+
+function doMove(move) {
+    inputQueue.push(move);
+}
+
+function moveDown() {
+    let key = controls.moveDown;
+    controls[key] = true;
+    accumulateMoveARR(moves.down, key, soft);
+}
+
+document.addEventListener("keydown", ev => {
+    if (configureInput) {
+        configureNewControl(ev.key);
+        return;
     }
-    if (ev.key === gameControls.moveLeft) {
-        inputQueue.push({ type: "shift", x: -1, y: 0 });
-    } else if (ev.key === gameControls.moveRight) {
-        inputQueue.push({ type: "shift", x: 1, y: 0 });
-    } else if (ev.key === gameControls.moveDown) {
-        inputQueue.push({ type: "shift", x: 0, y: 1 });
-    } else if (ev.key === gameControls.moveRotC) {
-        inputQueue.push({ type: "rotate", rot: 1 });
-    } else if (ev.key === gameControls.moveRotCC) {
-        inputQueue.push({ type: "rotate", rot: -1 });
-    } else if (ev.key === gameControls.moveDrop) {
-        inputQueue.push({ type: "drop" });
-    } else if (ev.key === gameControls.moveHold) {
-        inputQueue.push({ type: "hold" });
+    if (!controls.hasOwnProperty(ev.key)) {
+        return;
+    } else if (ev.key === controls.moveLeft && controls[ev.key] === false) {
+        moveSideways(ev.key, moves.left, controls.moveRight);
+    } else if (ev.key === controls.moveRight && controls[ev.key] === false) {
+        moveSideways(ev.key, moves.right, controls.moveLeft);
+    } else if (ev.key === controls.moveDown && controls[ev.key] === false) {
+        moveDown();
+    } else if (ev.key === controls.moveRotC && controls[ev.key] === false) {
+        doMoveOnce(moves.rotC, ev.key);
+    } else if (ev.key === controls.moveRotCC && controls[ev.key] === false) {
+        doMoveOnce(moves.rotCC, ev.key);
+    } else if (ev.key === controls.moveDrop && controls[ev.key] === false) {
+        doMoveOnce(moves.drop, ev.key);
+    } else if (ev.key === controls.moveHold && controls[ev.key] === false) {
+        doMoveOnce(moves.hold, ev.key);
     } else if (ev.key.toUpperCase() === "R") {
         restart();
     } else if (ev.key === "Escape") {
-        pauseResume();
+        pauseOrResume();
+    }
+});
+
+document.addEventListener("keyup", ev => {
+    if (controls[ev.key] !== false) {
+        clearTimeout(controls[ev.key]);
+        controls[ev.key] = false;
     }
 })
 
 document.getElementById("startButton").onclick = () => {
-    resume();
+    if (game.over()) {
+        restart();
+    } else {
+        resume();
+    }
 }
 
 document.getElementById("controlsButton").onclick = () => {
-    controls();
+    showControls();
 }
 
-document.querySelectorAll(".gameControlButton").forEach(button => {
-    button.onclick = () => {
-        if (configureInputPressed) {
-            return;
+function showControls() {
+    menuDiv.style.display = "none";
+    controlsDiv.style.display = "flex";
+}
+
+const gameControlButtons = document.querySelectorAll(".gameControlButton");
+for (let i = 0; i < gameControlButtons.length; i++) {
+    if (gameControlButtons[i].id === "controlsBackToMenu") {
+        gameControlButtons[i].onclick = () => {
+            pauseOrResume();
+        };
+    } else {
+        gameControlButtons[i].onclick = () => {
+            if (configureInput) {
+                return;
+            }
+            configureInput = true;
+            gameControlButtons[i].classList.add("gameControlButtonClicked");
+            keyPressed = gameControlButtons[i];
         }
-        configureInputPressed = true;
-        button.classList.add("gameControlButtonClicked");
-        configureInputButton = button;
     }
+}
+
+function configureNewControl(key) {
+    if (controls.reserved[key]) {
+        keyPressed.classList.add("gameControlReserved");
+        setTimeout(() => {
+            keyPressed.classList.remove("gameControlReserved");
+        }, 250);
+        return;
+    }
+
+    // Remove old index and index new key
+    let oldKey = controls[keyPressed.id];
+    delete controls[oldKey]
+    controls[key] = false;
+
+    // Set new control
+    controls[keyPressed.id] = key;
+    keyPressed.classList.remove("gameControlButtonClicked");
+    configureInput = false;
+}
+
+document.getElementById("settingsBackToMenu").onclick = () => {
+    pauseOrResume();
+}
+
+document.getElementById("settingsButton").onclick = () => {
+    settings();
+}
+
+function settings() {
+    menuDiv.style.display = "none";
+    settingsDiv.style.display = "flex";
+}
+
+document.querySelectorAll(".onlyNumbers").forEach(numBox => {
+    // Only allow integers in the textbox fields
+    numBox.onkeypress = ev => !isNaN(parseFloat(ev.key)) && isFinite(ev.key);
 });
 
 initialize();

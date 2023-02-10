@@ -13,21 +13,36 @@
 
 <body>
     <div class="overlay">
-        <div class = "navigation" id="menu">
+        <div class="navigation" id="menu">
             <p class="button" id="startButton">Start</p>
             <p class="button" id="controlsButton">Controls</p>
             <p class="button" id="settingsButton">Settings</p>
         </div>
-        <div class = "navigation" id="controls">
-            <p class="gameControlButton" id="moveLeft">Move left</br></p>
-            <p class="gameControlButton" id="moveRight">Move right</br></p>
+        <div class="navigation" id="controls">
+            <p class="gameControlButton" id="moveLeft">Left</br></p>
+            <p class="gameControlButton" id="moveRight">Right</br></p>
             <p class="gameControlButton" id="moveDown">Soft drop</br></p>
             <p class="gameControlButton" id="moveDrop">Hard drop</br></p>
-            <p class="gameControlButton" id="moveRotC">Rotate clockwise</br></p>
-            <p class="gameControlButton" id="moveRotCC">Rotate counterclockwise</br></p>
+            <p class="gameControlButton" id="moveRotC">Rotate CW</br></p>
+            <p class="gameControlButton" id="moveRotCC">Rotate CCW</br></p>
             <p class="gameControlButton" id="moveHold">Hold</br></p>
+            <p class="gameControlButton" id="controlsBackToMenu">Done</br></p>
         </div>
-        <div class = "navigation" id="settings"></div>
+        <div class="navigation" id="settings">
+            <div class="settingButton">
+                <label for="DASinput">DAS</label>
+                <input class="onlyNumbers" type="number" placeholder="105" id="DASinput" name="DASinput">
+            </div>
+            <div class="settingButton">
+                <label for="ARRinput">ARR</label>
+                <input class="onlyNumbers" type="number" placeholder="1" id="ARRinput" name="ARRinput">
+            </div>
+            <div class="settingButton">
+                <label for="softInput">Soft Drop</label>
+                <input class="onlyNumbers" type="number" placeholder="10" id="softInput" name="softInput">
+            </div>
+                <p class="settingButton" id="settingsBackToMenu">Done</p>
+        </div>
     </div>
     <div id="hold"></div>
     <div id="matrix"></div>

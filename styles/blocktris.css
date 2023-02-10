@@ -66,25 +66,25 @@ body {
     cursor: default;
 }
 
-.gameControlButton {
+.gameControlButton, .settingButton {
     display: block;
     width: 30vh;
     padding: 1vh;
     margin: 1vh;
     font-size: 1em;
     background-color: rgba(255, 255, 255, 0.70);
-    border: 1px solid #C8C8C8;
+    border: 1px solid #AAAAAA;
     text-align: center;
     color: black;
     border-radius: 15px;
     cursor: default;
 }
 
-.gameControlButton:hover {
+.gameControlButton:hover, .settingButton:hover {
     background-color: rgba(255, 255, 255, 0.4);
 }
 
-.gameControlButton:active {
+.gameControlButton:active, .settingButton:active {
     background-color: rgba(255, 255, 255, 0.90);
 }
 
@@ -94,12 +94,32 @@ body {
     border: 1px solid white;
 }
 
+.gameControlReserved {
+    color: red;
+    border: 1px solid red;
+}
+
 .button:hover {
     background-color: rgba(255, 255, 255, 0.90);
 }
 
 .button:active {
     background-color: rgba(255, 255, 255, 0.4);
+}
+
+.gameControlButton, .settingButton {
+    width: 30vh;
+}
+
+input[type="number"] {
+    display: inline-block;
+    width: 90%;
+    margin: 5px;
+    border: 1px solid #AAAAAA;
+    border-radius: 7px;
+    padding: 3px;
+    padding-left: 10px;
+    font-size: 1em;
 }
 
 /* 
@@ -161,11 +181,9 @@ Long story short: No hold or next preview for restricted ratios.
         font-size: 1em;
     }
 
-    .gameControlButton {
+    .gameControlButton, .settingButton {
         width: 45vh;
     }
-    
-
 }
 
 

@@ -15,7 +15,7 @@ export default class Game {
         this.updatedMatrix = true;
         this.updatedHold = true;
         this.updatedNext = true;
-        this.paused = false;
+        this.paused = true;
     }
 
     previewPieces() {
