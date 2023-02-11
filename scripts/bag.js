@@ -110,6 +110,10 @@ export default class Bag {
         return this.queue[0];
     }
 
+    currentPieceRot() {
+        return this.queue[0].rot;
+    }
+
     setCurrentPiece(piece) {
         this.queue[0] = piece;
     }

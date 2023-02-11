@@ -16,6 +16,42 @@ export default class Game {
         this.updatedHold = true;
         this.updatedNext = true;
         this.paused = true;
+        this.rotKick = {
+            0: {
+                1: [[-1, 0], [-1, -1], [0, 2], [-1, 2]],
+                3: [[1, 0], [1, -1], [0, 2], [1, 2]]
+            },
+            1: {
+                2: [[1, 0], [1, 1], [0, -2], [1, -2]],
+                0: [[1, 0], [1, 1], [0, -2], [1, -2]]
+            },
+            2: {
+                3: [[1, 0], [1, -1], [0, 2], [1, 2]],
+                1: [[-1, 0], [-1, -1], [0, 2], [-1, 2]]
+            },
+            3: {
+                0: [[-1, 0], [-1, 1], [0, -2], [-1, -2]],
+                2: [[-1, 0], [-1, 1], [0, -2], [-1, -2]]
+            }
+        };
+        this.rotKickI = {
+            0: {
+                1: [[-2, 0], [1, 0], [-2, 1], [1, -2]],
+                3: [[-1, 0], [2, 0], [-1, -2], [2, 1]]
+            },
+            1: {
+                2: [[-1, 0], [2, 0], [-1, -2], [2, 1]],
+                0: [[2, 0], [-1, 0], [2, -1], [-1, 2]]
+            },
+            2: {
+                3: [[2, 0], [-1, 0], [2, -1], [-1, 2]],
+                1: [[1, 0], [-2, 0], [1, 2], [-2, -1]]
+            },
+            3: {
+                0: [[1, 0], [-2, 0], [1, 2], [-2, -1]],
+                2: [[-2, 0], [1, 0], [-2, 1], [1, -2]]
+            }
+        };
     }
 
     previewPieces() {
@@ -67,7 +103,35 @@ export default class Game {
 
     rotatePiece(rot) {
         let rotatedPiece = this.bag.rotateCurrentPiece(rot);
-        this.moveIfValid(rotatedPiece)
+
+        if (rotatedPiece.type === "o") {
+            return; // If rotating an o piece, no change
+        }
+
+        // Try to rotate piece
+        if (this.moveIfValid(rotatedPiece)) {
+            return;
+        }
+
+        // Try wall kicks
+        if (rotatedPiece.type === "i") { // i piece
+            this.rotateWithWallKick(rotatedPiece, this.rotKickI);
+        } else { // l, j, s, t, or z piece
+            this.rotateWithWallKick(rotatedPiece, this.rotKick);
+        }
+    }
+
+    rotateWithWallKick(rotatedPiece, wallKicks) {
+        let iniRot = this.bag.currentPieceRot();
+        let newRot = rotatedPiece.rot;
+        let wallKick = wallKicks[iniRot][newRot];
+        let potPiece;
+        for (let i = 0; i < wallKick.length; i++) {
+            potPiece = this.bag.shiftPiece(rotatedPiece, wallKick[i][0], wallKick[i][1]);
+            if (this.moveIfValid(potPiece)) {
+                return;
+            }
+        }
     }
 
     dropPiece() {
@@ -90,7 +154,9 @@ export default class Game {
         if (this.matrix.valid(piece)) {
             this.bag.setCurrentPiece(piece);
             this.updatedMatrix = true;
+            return true;
         }
+        return false;
     }
 
     getRows() {
