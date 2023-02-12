@@ -6,46 +6,59 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="styles/blocktris.css">
+    <link rel="stylesheet" href="styles/blocks.css">
     <script src="scripts/main.js" defer type="module"></script>
-    <title>Blocktris</title>
+    <title>Blocks</title>
 </head>
 
 <body>
-    <div class="overlay">
+    <div class="overlay">  <!-- Where the menus will live -->
+
+        <!-- Main menu to start/update controls/update settings -->
         <div class="navigation" id="menu">
             <p class="button" id="startButton">Start</p>
             <p class="button" id="controlsButton">Controls</p>
             <p class="button" id="settingsButton">Settings</p>
         </div>
+
+        <!-- Configure controls menu -->
         <div class="navigation" id="controls">
             <p class="gameControlButton" id="moveLeft">Left</br></p>
             <p class="gameControlButton" id="moveRight">Right</br></p>
-            <p class="gameControlButton" id="moveDown">Soft drop</br></p>
-            <p class="gameControlButton" id="moveDrop">Hard drop</br></p>
+            <p class="gameControlButton" id="moveDown">Down</br></p>
+            <p class="gameControlButton" id="moveDrop">Drop</br></p>
             <p class="gameControlButton" id="moveRotC">Rotate CW</br></p>
             <p class="gameControlButton" id="moveRotCC">Rotate CCW</br></p>
             <p class="gameControlButton" id="moveHold">Hold</br></p>
-            <p class="gameControlButton" id="controlsBackToMenu">Done</br></p>
+            <p class="gameControlButton" id="controlsDone">Done</br></p>
         </div>
+
+        <!-- Configure settings menu. User can configure how fast pieces move -->
         <div class="navigation" id="settings">
             <div class="settingButton">
-                <label for="DASinput">DAS</label>
-                <input class="onlyNumbers" type="number" placeholder="105" id="DASinput" name="DASinput">
+                <label for="LRSinput">Left/Right Speed</label>
+                <input class="onlyNumbers" type="number" placeholder="1" id="LRSinput" name="LRSinput">
             </div>
             <div class="settingButton">
-                <label for="ARRinput">ARR</label>
-                <input class="onlyNumbers" type="number" placeholder="1" id="ARRinput" name="ARRinput">
+                <label for="LRSDinput">L/R Speed Delay</label>
+                <input class="onlyNumbers" type="number" placeholder="105" id="LRSDinput" name="LRSDinput">
             </div>
             <div class="settingButton">
-                <label for="softInput">Soft Drop</label>
-                <input class="onlyNumbers" type="number" placeholder="10" id="softInput" name="softInput">
+                <label for="DSinput">Down Speed</label>
+                <input class="onlyNumbers" type="number" placeholder="10" id="DSinput" name="DSinput">
             </div>
-                <p class="settingButton" id="settingsBackToMenu">Done</p>
+            <p class="settingButton" id="settingsDone">Done</p>
         </div>
     </div>
+
+    <!-- 
+        Main game. 
+        Hold is where the held piece will be viewed
+        Grid is where the pieces are dropped
+        Next is where the pieces in queue are
+     -->
     <div id="hold"></div>
-    <div id="matrix"></div>
+    <div id="grid"></div>
     <div id="next"></div>
 </body>
 

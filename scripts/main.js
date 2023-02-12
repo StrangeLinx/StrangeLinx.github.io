@@ -1,14 +1,29 @@
 import Game from "./game.js";
 
-const game = new Game();
+// Retrieve game elements to draw on
 const backgroundDiv = document.createElement("div");
 const holdDiv = document.getElementById("hold");
-const matrixDiv = document.getElementById("matrix");
+const gridDiv = document.getElementById("grid");
 const nextDiv = document.getElementById("next");
+
+// Menu elements
 const menuDiv = document.getElementById("menu");
 const controlsDiv = document.getElementById("controls");
 const settingsDiv = document.getElementById("settings");
+let configureInput = false;  // Determines if button is pressed in controls menu
 
+
+// Main game
+const game = new Game();
+let lastTime = 0;
+let inputQueue = [];  // Captures users input
+
+
+// Controls to move the pieces
+// Includes reserved control keys.
+// Two main uses
+//   1 - map user input to a move
+//   2 - determine if key user pressed is being held
 const controls = {
     moveLeft: "ArrowLeft",
     moveRight: "ArrowRight",
@@ -17,6 +32,7 @@ const controls = {
     moveRotC: "ArrowUp",
     moveRotCC: "x",
     moveHold: "z",
+
     // Indexed to determine key held
     "ArrowLeft": false,
     "ArrowRight": false,
@@ -25,11 +41,14 @@ const controls = {
     "ArrowUp": false,
     "x": false,
     "z": false,
+
+    // Reserved for restarting and pausing
     "r": false,
     "Escape": false,
     reserved: { r: true, Escape: true }
 };
 
+// Set of valid moves
 const moves = {
     left: { type: "shift", x: -1, y: 0 },
     right: { type: "shift", x: 1, y: 0 },
@@ -40,17 +59,19 @@ const moves = {
     hold: { type: "hold" }
 }
 
-const DASDEFAULT = 105;
-const ARRDEFAULT = 1;
-const SOFTDROPDEFAULT = 10
-let das = DASDEFAULT;
-let arr = ARRDEFAULT;
-let soft = SOFTDROPDEFAULT;
-let lastTime = 0;
-let inputQueue = [];
-let configureInput = false;
+// How fast pieces moves (measured in ms)
+//     L/R Speed is how fast the left/right move is repeated
+//     L/R Speed delay is delay between first key press and repeating L/R move
+//     Down speed is how fast the down move is repeated
+const LEFT_RIGHT_SPEED_DEFAULT = 1;
+const LEFT_RIGHT_SPEED_DELAY_DEFAULT = 105;
+const DOWN_SPEED_DEFAULT = 10
+let lrsd = LEFT_RIGHT_SPEED_DELAY_DEFAULT;
+let lrs = LEFT_RIGHT_SPEED_DEFAULT;
+let ds = DOWN_SPEED_DEFAULT;
 let keyPressed = "";
 
+// Game starts off as paused. Draw the background.
 function initialize() {
     createBackgroundDiv();
     draw();
@@ -59,7 +80,7 @@ function initialize() {
 function createBackgroundDiv() {
     for (let y = 0; y < game.getRows(); y++) {
         for (let x = 0; x < game.getCols(); x++) {
-            backgroundDiv.appendChild(createMinoDiv(x, y, "empty"));
+            backgroundDiv.appendChild(createSquareDiv(x, y, "empty"));
         }
     }
 }
@@ -77,6 +98,7 @@ function main() {
     window.requestAnimationFrame(main);
 }
 
+// Retrieve user input and update the game accordingly
 function update() {
     let move = getInput();
     if (move) {
@@ -89,35 +111,35 @@ function getInput() {
 }
 
 function draw() {
-    if (game.updatedMatrix) {
-        matrixDiv.innerHTML = backgroundDiv.innerHTML;
-        drawMinos(matrixDiv, game.getMatrixMinos());
-        game.setUpdatedMatrix(false);
+    if (game.updatedGrid) {
+        gridDiv.innerHTML = backgroundDiv.innerHTML;
+        drawSquares(gridDiv, game.getGridSquares());
+        game.setUpdatedGrid(false);
     }
     if (game.updatedHold) {
         holdDiv.innerHTML = "";
-        drawMinos(holdDiv, game.getHoldMinos());
+        drawSquares(holdDiv, game.getHoldSquares());
         game.setUpdatedHold(false);
     }
     if (game.updatedNext) {
         nextDiv.innerHTML = "";
-        drawMinos(nextDiv, game.getNextMinos());
+        drawSquares(nextDiv, game.getNextSquares());
         game.setUpdatedNext(false);
     }
 }
 
-function drawMinos(parentDiv, minos) {
-    minos.forEach(mino => {
-        parentDiv.appendChild(createMinoDiv(mino.x, mino.y, mino.type));
+function drawSquares(parentDiv, squares) {
+    squares.forEach(square => {
+        parentDiv.appendChild(createSquareDiv(square.x, square.y, square.type));
     });
 }
 
-function createMinoDiv(x, y, minoType) {
-    const minoDiv = document.createElement("div");
-    minoDiv.style.gridRowStart = y + 1;
-    minoDiv.style.gridColumnStart = x + 1;
-    minoDiv.classList.add(minoType);
-    return minoDiv;
+function createSquareDiv(x, y, squareType) {
+    const squareDiv = document.createElement("div");
+    squareDiv.style.gridRowStart = y + 1;
+    squareDiv.style.gridColumnStart = x + 1;
+    squareDiv.classList.add(squareType);
+    return squareDiv;
 }
 
 function restart() {
@@ -126,7 +148,7 @@ function restart() {
 }
 
 function pauseOrResume() {
-    // Configuring controls shouldn't pause or resume
+    // Actively configuring controls shouldn't pause or resume
     if (configureInput) {
         return;
     }
@@ -136,6 +158,7 @@ function pauseOrResume() {
     } else if (settingsDiv.style.display === "flex") {
         configureSettings();
         pause();
+    // If the user lost they're brought to the main menu
     } else if (game.over()) {
         restart();
     } else if (!game.paused) {
@@ -145,24 +168,28 @@ function pauseOrResume() {
     }
 }
 
+// User can configure the following in the settings menu
+//    Left/Right speed
+//    Left/Right speed delay
+//    Down move speed
 function configureSettings() {
-    const dasIn = document.getElementById("DASinput");
-    const arrIn = document.getElementById("ARRinput");
-    const softIn = document.getElementById("softInput");
-    if (dasIn.value === "") {
-        das = DASDEFAULT;
-    } else if (!isNaN(parseFloat(dasIn.value)) && isFinite(dasIn.value)) {
-        das = dasIn.value;
+    const lrsdIn = document.getElementById("LRSDinput");
+    const lrsIn = document.getElementById("LRSinput");
+    const dsIn = document.getElementById("DSinput");
+    if (lrsIn.value === "") {
+        lrs = LEFT_RIGHT_SPEED_DEFAULT;
+    } else if (!isNaN(parseFloat(lrsIn.value)) && isFinite(lrsIn.value)) {
+        lrs = lrsIn.value;
     }
-    if (arrIn.value === "") {
-        arr = ARRDEFAULT;
-    } else if (!isNaN(parseFloat(arrIn.value)) && isFinite(arrIn.value)) {
-        arr = arrIn.value;
+    if (lrsdIn.value === "") {
+        lrsd = LEFT_RIGHT_SPEED_DELAY_DEFAULT;
+    } else if (!isNaN(parseFloat(lrsdIn.value)) && isFinite(lrsdIn.value)) {
+        lrsd = lrsdIn.value;
     }
-    if (softIn.value === "") {
-        soft = SOFTDROPDEFAULT;
-    } else if (!isNaN(parseFloat(softIn.value)) && isFinite(softIn.value)) {
-        soft = softIn.value;
+    if (dsIn.value === "") {
+        ds = DOWN_SPEED_DEFAULT;
+    } else if (!isNaN(parseFloat(dsIn.value)) && isFinite(dsIn.value)) {
+        ds = dsIn.value;
     }
 }
 
@@ -170,12 +197,13 @@ function pause() {
     game.pause();
     controlsDiv.style.display = "none";
     settingsDiv.style.display = "none";
-    menuDiv.style.display = "flex";
+    menuDiv.style.display = "flex"; // show the main menu
 
 }
 
 function resume() {
     game.resume();
+    // hide all menus and reset inputs so game doesn't auto-play
     controlsDiv.style.display = "none";
     settingsDiv.style.display = "none";
     menuDiv.style.display = "none";
@@ -194,16 +222,15 @@ function moveSideways(key, move, oppKey) {
 
     controls[key] = true;
     doMove(move);
-    controls[key] = setTimeout(accumulateMoveDAS, das, move, key);
+
+    // Delay before the move starts repeating 
+    controls[key] = setTimeout(accumulateMove, lrsd, move, key, lrs);
 }
 
-function accumulateMoveDAS(move, key) {
-    controls[key] = setTimeout(accumulateMoveARR, arr, move, key, arr);
-}
-
-function accumulateMoveARR(move, key, delay) {
+// Move and repeat where delay is timebetween each repeat
+function accumulateMove(move, key, delay) {
     doMove(move);
-    controls[key] = setTimeout(accumulateMoveARR, delay, move, key, delay);
+    controls[key] = setTimeout(accumulateMove, delay, move, key, delay);
 }
 
 function doMoveOnce(move, key) {
@@ -218,7 +245,7 @@ function doMove(move) {
 function moveDown() {
     let key = controls.moveDown;
     controls[key] = true;
-    accumulateMoveARR(moves.down, key, soft);
+    accumulateMove(moves.down, key, ds);
 }
 
 document.addEventListener("keydown", ev => {
@@ -228,6 +255,8 @@ document.addEventListener("keydown", ev => {
     }
     if (!controls.hasOwnProperty(ev.key)) {
         return;
+    // Prevent event listener from adding it's own key pressed repeat by
+    // checking if key is being held already.
     } else if (ev.key === controls.moveLeft && controls[ev.key] === false) {
         moveSideways(ev.key, moves.left, controls.moveRight);
     } else if (ev.key === controls.moveRight && controls[ev.key] === false) {
@@ -250,6 +279,7 @@ document.addEventListener("keydown", ev => {
 });
 
 document.addEventListener("keyup", ev => {
+    // Once user lifts up key then cancel all move repeats by clearing active timeouts
     if (controls[ev.key] !== false) {
         clearTimeout(controls[ev.key]);
         controls[ev.key] = false;
@@ -275,10 +305,14 @@ function showControls() {
 
 const gameControlButtons = document.querySelectorAll(".gameControlButton");
 for (let i = 0; i < gameControlButtons.length; i++) {
-    if (gameControlButtons[i].id === "controlsBackToMenu") {
+    // User clicking on the "done" button should return to menu
+    if (gameControlButtons[i].id === "controlsDone") {
         gameControlButtons[i].onclick = () => {
             pauseOrResume();
         };
+
+    // User clicking on a configure control button should make button "active"
+    // This lets user know to click on a key
     } else {
         gameControlButtons[i].onclick = () => {
             if (configureInput) {
@@ -292,6 +326,7 @@ for (let i = 0; i < gameControlButtons.length; i++) {
 }
 
 function configureNewControl(key) {
+    // Don't allow configuring a control on a reserved key
     if (controls.reserved[key]) {
         keyPressed.classList.add("gameControlReserved");
         setTimeout(() => {
@@ -311,7 +346,8 @@ function configureNewControl(key) {
     configureInput = false;
 }
 
-document.getElementById("settingsBackToMenu").onclick = () => {
+// User clicking on the "done" button should return to menu
+document.getElementById("settingsDone").onclick = () => {
     pauseOrResume();
 }
 
@@ -325,7 +361,7 @@ function settings() {
 }
 
 document.querySelectorAll(".onlyNumbers").forEach(numBox => {
-    // Only allow integers in the textbox fields
+    // Restrict to integers in the textbox fields
     numBox.onkeypress = ev => !isNaN(parseFloat(ev.key)) && isFinite(ev.key);
 });
 

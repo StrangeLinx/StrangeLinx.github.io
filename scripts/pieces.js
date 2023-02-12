@@ -1,30 +1,22 @@
-// Structure of pieces
-// pieces.num are the number of unique pieces
-// piece.types are the unique types of pieces
-// pieces[pieceType][Rotation][Mino]
-//     Rotation is the number of 90 degree rotations
-//     Each piece has 4 minos and Mino gives x and y that it spans given to it's origin (0, 0)
-//
-// Example. pieces["o"][0][2] describes the 3rd (index 2) mino's (x, y) position of an "o"
-//          block relative to it's origin. As shown, O is origin and X is mino's position:
-//          ----Xo----
-//          ----Oo----
-//
-// Note: Origin of matrix is top left. Positive x axis is right and positive y axis is down.
-//       This means that to go up 1 unit you subtract 1 from y
-
+// Piece holds the property of a piece.
+// Each piece has 4 squares which is represented by it's span
+// Span is determined by it's x, y position and rotation
+// Default piece spawn is the top middle (-left) of the board
 
 export default class Piece {
 
-    constructor(type, rot, span, x, y) {
+    constructor(type, rot = 0, span, x = 4, y = 0) {
         this.type = type;
-        this.rot = (rot !== undefined) ? rot : 0;
+        this.rot = rot;
         this.span = (span !== undefined) ? span : pieces[type][this.rot];
-        this.x = (x !== undefined) ? x : 4;
-        this.y = (y !== undefined) ? y : 0;
+        this.x = x;
+        this.y = y
     }
 
     rotate(rot) {
+        // rot represents the number of 90 degree rotations.
+        // If adding 1 to 3 then bring back down to 0
+        // If subtracting 1 from 0 bring up to 3
         this.rot = (this.rot + rot + 4) % 4;
         this.span = pieces[this.type][this.rot];
     }
@@ -38,6 +30,20 @@ export default class Piece {
     }
 
 }
+
+
+// Structure of pieces
+// pieces[pieceType][Rotation][Square]
+//     Rotation is the number of 90 degree rotations
+//     Each piece has 4 squares and that have their own x and y and span
+//
+// Example. pieces["o"][0][2] describes the 3rd (index 2) square's (x, y) position of an "o"
+//          block relative to it's origin. As shown, big O is origin and X is square's position:
+//          ----Xo----
+//          ----Oo----
+//
+// Note: Origin of grid is top left. Positive x axis is right and positive y axis is down.
+//       This means that to go up 1 unit subtract 1 from y
 
 const pieces = {
     o: {

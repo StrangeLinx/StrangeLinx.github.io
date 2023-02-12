@@ -111,7 +111,7 @@ body {
     width: 30vh;
 }
 
-input[type="number"] {
+input[type="number"] { 
     display: inline-block;
     width: 90%;
     margin: 5px;
@@ -124,17 +124,17 @@ input[type="number"] {
 
 /* 
 
-    Matrix is the board where pieces will be placed
+    Grid is the board where pieces will be placed
     hold is the held piece preview
     next are the pieces in queue
 
 */
 
-#matrix {
+#grid {
     display: grid;
     border-radius: 3px;
     border: 0.2vmin solid #393939;
-    /* Matrix is defined to be 20 by 10 */
+    /* Grid is defined to be 20 by 10 */
     grid-template-rows: repeat(20, 1fr);
     grid-template-columns: repeat(10, 1fr);
     width: 40vh;
@@ -142,9 +142,9 @@ input[type="number"] {
 }
 
 /*
-If viewing on mobile real estate is more important than previews
-(maybe not hold). Will add feature for mobile support later (if at all)
-Long story short: No hold or next preview for restricted ratios.
+    If viewing on mobile real estate is important
+    Will probably add feature for mobile support later (maybe not)
+    No hold or next preview for restricted ratios.
 */
 
 #hold {
@@ -160,7 +160,7 @@ Long story short: No hold or next preview for restricted ratios.
 }
 
 @media screen and (orientation: landscape) {
-    #matrix {
+    #grid {
         width: 48vh;
         height: 96vh;
     }
@@ -190,8 +190,8 @@ Long story short: No hold or next preview for restricted ratios.
 /* 
 
     Piece Decorations
-    empty - gives matrix background pattern
-    ghost - where piece would be if hard dropped
+    empty - gives grid background pattern
+    dropPreview - where piece would be if dropped
     oiljstz - pieces
 
 */
@@ -201,7 +201,7 @@ Long story short: No hold or next preview for restricted ratios.
     border-radius: 8px;
 }
 
-.ghost {
+.dropPreview {
     background-color: #2b2b2b;
     border: 1px solid #7e7e7e;
     border-radius: 5px;
